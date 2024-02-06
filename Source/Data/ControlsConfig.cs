@@ -109,7 +109,7 @@ public class ControlsConfig
 			],
 			["Climb"] = [
 				new(Keys.Z),new(Keys.V),new(Keys.LeftShift),new(Keys.RightShift),
-				new(Buttons.LeftShoulder),new(Buttons.RightShoulder),
+				new(Buttons.RightShoulder),
 				new(Axes.LeftTrigger, 0.4f, false),
 				new(Axes.RightTrigger, 0.4f, false),
 			],
@@ -125,8 +125,12 @@ public class ControlsConfig
 			],
 			["Pause"] = [
 				new(Keys.Enter), new(Keys.Escape),
-				new(Buttons.Start), new(Buttons.Select), new(Buttons.Back)
+				new(Buttons.Start), new(Buttons.Select), new(Buttons.Back),
 			],
+
+			["UpDash"] = [
+                new(Buttons.LeftShoulder)
+            ]
 		},
 
 		Sticks = new() {

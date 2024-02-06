@@ -13,7 +13,9 @@ public static class Controls
 	public static readonly VirtualButton Cancel = new("Cancel");
 	public static readonly VirtualButton Pause = new("Pause");
 
-	public static void Load(ControlsConfig? config = null)
+    public static readonly VirtualButton UpDash = new("UpDash");
+
+    public static void Load(ControlsConfig? config = null)
 	{
 		static ControlsConfig.Stick FindStick(ControlsConfig? config, string name)
 		{
@@ -52,6 +54,9 @@ public static class Controls
 		foreach (var it in FindAction(config, "Pause"))
 			it.BindTo(Pause);
 
+		foreach (var it in FindAction(config, "UpDash"))
+			it.BindTo(UpDash);
+
 	}
 
 	public static void Clear()
@@ -65,6 +70,8 @@ public static class Controls
 		Confirm.Clear();
 		Cancel.Clear();
 		Pause.Clear();
+
+		UpDash.Clear();
 	}
 
 	public static void Consume()
@@ -78,6 +85,8 @@ public static class Controls
 		Confirm.Consume();
 		Cancel.Consume();
 		Pause.Consume();
+
+		UpDash.Consume();
 	}
 
 	private static readonly Dictionary<string, Dictionary<string, string>> prompts = [];
