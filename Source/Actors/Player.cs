@@ -27,6 +27,8 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 	private const float CoyoteTime = .12f;
 	private const float WallJumpXYSpeed = MaxSpeed * 1.3f;
 
+	private const float BoostWallJumpMultiplier = 2.4f;
+
 	private const float DashSpeed = 140;
 	private const float DashEndSpeedMult = .75f;
 	private const float DashTime = .2f;
@@ -158,6 +160,8 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 	private Sound? sfxWallSlide;
 	private Sound? sfxFeather;
 	private Sound? sfxBubble;
+
+	private float tBoostWallJump;
 
 	private Vec3 SolidWaistTestPos 
 		=> Position + Vec3.UnitZ * 3;
@@ -335,6 +339,9 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 				tGroundSnapCooldown -= Time.Delta;
 			if (tClimbCooldown > 0)
 				tClimbCooldown -= Time.Delta;
+
+			if (tBoostWallJump > 0)
+				tBoostWallJump -= Time.Delta;
 		}
 
 		previousVelocity = velocity;
@@ -748,7 +755,7 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 	private void WallJump()
 	{
 		holdJumpSpeed = velocity.Z = JumpSpeed;
-		tHoldJump = JumpHoldTime;
+        tHoldJump = JumpHoldTime;
 		autoJump = false;
 
 		var velXY = targetFacing * WallJumpXYSpeed;
@@ -760,6 +767,27 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		ModelScale = new(.6f, .6f, 1.4f);
 		Audio.Play(Sfx.sfx_jump_wall, Position);
 	}
+
+	private void BoostWallJump()
+	{
+		holdJumpSpeed = velocity.Z = JumpSpeed * BoostWallJumpMultiplier;
+		tHoldJump = JumpHoldTime;
+		autoJump = false;
+
+        stateMachine.State = States.Normal;
+
+        tBoostWallJump = 0f;
+
+		var velXY = targetFacing * WallJumpXYSpeed;
+		velocity = velocity.WithXY(velXY);
+
+		AddPlatformVelocity(false);
+		CancelGroundSnap();
+
+		ModelScale = new(.6f, .6f, 1.4f);
+		Audio.Play(Sfx.sfx_jump_wall, Position);
+        Audio.Play(Sfx.sfx_jump_superslide, Position);
+    }
 
 	private void SkidJump()
 	{
@@ -1153,13 +1181,15 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		if (TryDash())
 			return;
 
-        //updash
+        // updash
         if (TryUpDash())
             return;
 
-        // jump & gravity
-        if (tCoyote > 0 && Controls.Jump.ConsumePress())
+		// jump & gravity
+		if (tCoyote > 0 && Controls.Jump.ConsumePress())
 			Jump();
+		else if (tBoostWallJump > 0 && WallJumpCheck())
+			BoostWallJump();
 		else if (WallJumpCheck())
 			WallJump();
 		else
@@ -1231,6 +1261,8 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 	private bool dashedOnGround;
 	private int dashTrailsCreated;
 
+	private float tBoostWallJumpWindow;
+
     private bool dashedUpward;
 
     private bool TryDash()
@@ -1272,6 +1304,9 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		tDashResetCooldown = DashResetCooldown;
 		tNoDashJump = .1f;
 		dashTrailsCreated = 0;
+
+		//if(dashedUpward) 
+			//tBoostWallJump = 6f;
 
 		World.HitStun = .02f;
 
@@ -1323,6 +1358,10 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 			stateMachine.State = States.Normal;
 			DashJump();
 			return;
+		} //boost walljump
+		else if (dashedUpward && WallJumpCheck())
+		{
+			BoostWallJump();
 		}
 	}
 
